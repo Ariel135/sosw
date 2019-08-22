@@ -97,8 +97,9 @@ class Scheduler(Essential):
         'queue_bucket':    'autotest-bucket',
         'shutdown_period': 60,
         'rows_to_process': 50,
-        'job_schema':      {
-            'chunkable_attrs': [
+        'job_schema':      {},
+        'job_schema_variants': {
+            'default': [
                 # ('section', {}),
                 # ('store', {}),
                 # ('product', {}),
@@ -135,6 +136,7 @@ class Scheduler(Essential):
         """
 
         job = self.extract_job_from_payload(event)
+        self.apply_job_schema(name=job.get('job_schema_name'))
 
         # If called as sibling
         if 'file_name' in job:
@@ -147,6 +149,15 @@ class Scheduler(Essential):
         self.process_file()
 
         super().__call__(event)
+
+
+    def apply_job_schema(self, name: str = None):
+        """
+        Apply a job_schema from variants by the name or apply the default one.
+
+        """
+
+        self.config['job_schema'] = self.config['job_schema_variants'].get(name, 'default')
 
 
     def parse_job_to_file(self, job: Dict):
