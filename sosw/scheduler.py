@@ -99,11 +99,13 @@ class Scheduler(Essential):
         'rows_to_process': 50,
         'job_schema':      {},
         'job_schema_variants': {
-            'default': [
-                # ('section', {}),
-                # ('store', {}),
-                # ('product', {}),
-            ],
+            'default': {
+                'chunkable_attrs': [
+                    # ('section', {}),
+                    # ('store', {}),
+                    # ('product', {}),
+                ]
+            }
         },
         'task_operational_overhead_for_ddb': 0.03,
     }
