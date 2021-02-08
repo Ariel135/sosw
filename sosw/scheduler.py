@@ -5,7 +5,7 @@
     sosw - Serverless Orchestrator of Serverless Workers
 
     The MIT License (MIT)
-    Copyright (C) 2020  sosw core contributors <info@sosw.app>
+    Copyright (C) 2021  sosw core contributors <info@sosw.app>
 
     Permission is hereby granted, free of charge, to any person obtaining a copy
     of this software and associated documentation files (the "Software"), to deal
@@ -124,10 +124,7 @@ class Scheduler(Essential):
 
         self.set_queue_file()
 
-        self.chunkable_attrs = list([x[0] for x in self.config['job_schema']['chunkable_attrs']])
-        assert not any(x.endswith('s') for x in self.chunkable_attrs), \
-            f"We do not currently support attributes that end with 's'. " \
-            f"In the config you should use singular form of attribute. Received from config: {self.chunkable_attrs}"
+        self.initialize_from_job_schema()
 
 
     def __call__(self, event):
@@ -154,12 +151,24 @@ class Scheduler(Essential):
 
 
     def apply_job_schema(self, name: str = None):
-        """
-        Apply a job_schema from job_schema_variants by the name or apply the default one.
+        """ Apply a job_schema from job_schema_variants by the name or apply the default one."""
 
-        """
+        new_job_schema = self.config['job_schema_variants'].get(name, 'default')
 
-        self.config['job_schema'] = self.config['job_schema_variants'].get(name, 'default')
+        # Update job schema if there are any changes
+        if self.config['job_schema'] != new_job_schema:
+            self.config['job_schema'] = self.config['job_schema_variants'][name or 'default']
+            self.initialize_from_job_schema()
+
+
+    def initialize_from_job_schema(self):
+        """Initialize attributes that are mapped to the `job_schema` in self.config"""
+
+        # Initalize chunkable attrs
+        self.chunkable_attrs = list([x[0] for x in self.config['job_schema']['chunkable_attrs']])
+        assert not any(x.endswith('s') for x in self.chunkable_attrs), \
+            f"We do not currently support attributes that end with 's'. " \
+            f"In the config you should use singular form of attribute. Received from config: {self.chunkable_attrs}"
 
 
     def parse_job_to_file(self, job: Dict):
